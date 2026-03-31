@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, memo } from "react";
-import { RotateCcw, Calendar, AlertCircle, ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
+import { RotateCcw, Calendar, AlertCircle, ChevronLeft, ChevronRight, Pencil, Trash2, CheckCircle2 } from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -11,13 +11,15 @@ interface Transaction {
   date: string;
   promiseDate?: string;
   isSettled?: boolean;
+  risk?: "Low" | "Medium" | "High";
 }
 
 interface ActivitySectionProps {
   transactions: Transaction[];
   currency: string;
-  onToggleType: (id: string) => void;
   onToggleSettle: (id: string) => void;
+  onEdit: (tx: Transaction) => void;
+  onDelete: (id: string) => void;
   luxColors: {
     textMuted: string;
     lent: string;
@@ -28,12 +30,14 @@ interface ActivitySectionProps {
 const ActivitySection = memo(({ 
   transactions, 
   currency, 
-  onToggleType, 
   onToggleSettle,
+  onEdit,
+  onDelete,
   luxColors
 }: ActivitySectionProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState<"all" | "gave" | "borrowed">("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const itemsPerPage = 5;
 
   const filteredTransactions = transactions.filter(tx => filter === 'all' ? true : tx.type === filter);
@@ -95,12 +99,42 @@ const ActivitySection = memo(({
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-6 items-center opacity-0 group-hover:opacity-100 transition-all">
-                    {!tx.isSettled && <button onClick={() => onToggleType(tx.id)} className="hover:text-[#0F172A] transition-colors"><RotateCcw className="w-3.5 h-3.5 font-bold" /></button>}
-                    <button onClick={() => onToggleSettle(tx.id)} className="text-[9px] font-bold uppercase tracking-wider hover:text-[#0F172A] transition-colors font-sans">
-                      {tx.isSettled ? 'Undo' : 'Done'}
-                    </button>
-                    <MoreVertical className="w-4 h-4 opacity-10" />
+                  <div className="flex items-center min-w-0">
+                    {expandedId === tx.id ? (
+                      <div className="flex gap-1 md:gap-2 items-center animate-in slide-in-from-right duration-300 bg-[#E2E8F0]/30 p-1 rounded-full border border-[#E2E8F0]">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onEdit(tx); setExpandedId(null); }} 
+                          className="w-9 h-9 flex items-center justify-center text-[#64748B] hover:text-[#0F172A] hover:bg-white rounded-full transition-all"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onDelete(tx.id); setExpandedId(null); }} 
+                          className="w-9 h-9 flex items-center justify-center text-[#E11D48]/50 hover:text-[#E11D48] hover:bg-white rounded-full transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onToggleSettle(tx.id); setExpandedId(null); }} 
+                          className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${tx.isSettled ? 'text-[#0F172A] hover:bg-white' : 'bg-[#0F172A] text-white shadow-md active:scale-95'}`}
+                        >
+                          {tx.isSettled ? <RotateCcw className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setExpandedId(null); }} 
+                          className="w-9 h-9 flex items-center justify-center text-[#64748B] hover:text-[#0F172A] hover:bg-white rounded-full transition-all"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setExpandedId(tx.id); }} 
+                        className="w-10 h-10 flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] rounded-full transition-all opacity-40 hover:opacity-100"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

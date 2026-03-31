@@ -25,7 +25,7 @@ export default function BottomNavbar({ onOpenForm, activeTab, onChangeTab }: Bot
 
   return (
     <div className="fixed bottom-0 left-0 w-full pwa-safe-area-pb bg-gradient-to-t from-[#F2F4F7] via-[#F2F4F7]/80 to-transparent pt-12 px-4 md:px-8 z-40 pointer-events-none">
-      <nav className="mb-8 md:mb-10 max-w-md mx-auto bg-white/70 backdrop-blur-2xl backdrop-saturate-[1.8] rounded-[2rem] border border-white/60 shadow-[0_30px_60px_-10px_rgba(0,0,0,0.1)] p-1.5 md:p-2 grid grid-cols-[1fr_auto_1fr] items-center pointer-events-auto relative">
+      <nav className="mb-3 md:mb-5 max-w-md mx-auto bg-white/70 backdrop-blur-2xl backdrop-saturate-[1.8] rounded-[2rem] border border-white/60 shadow-[0_30px_60px_-10px_rgba(0,0,0,0.1)] p-1.5 md:p-2 grid grid-cols-[1fr_auto_1fr] items-center pointer-events-auto relative">
         <button 
           onClick={() => onChangeTab('home')}
           className={`w-full flex flex-col items-center justify-center py-2.5 md:py-3 rounded-[24px] transition-all duration-300 ${activeTab === 'home' ? 'bg-[#E2E8F0] text-[#0F172A]' : 'text-[#64748B] hover:text-[#0F172A]'}`}

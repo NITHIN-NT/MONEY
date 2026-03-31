@@ -33,7 +33,26 @@ export const requestForToken = async () => {
   }
 
   const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
+  if (permission === "granted") {
+    // Show instant welcome notification
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification("Welcome", {
+          body: "Notifications enabled! You'll now receive updates about your finances.",
+          icon: "/logo.png",
+          badge: "/logo.png",
+          vibrate: [100, 50, 100],
+          tag: 'welcome-notification'
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+      });
+    } else {
+      new Notification("MONEY", {
+        body: "Notifications enabled! You'll now receive updates about your finances.",
+        icon: "/logo.png"
+      });
+    }
+  } else {
     return null;
   }
 

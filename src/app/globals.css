@@ -81,7 +81,7 @@ body {
 }
 
 .pwa-safe-area-pb {
-  padding-bottom: env(safe-area-inset-bottom, 40px);
+  padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 
 .no-scrollbar::-webkit-scrollbar {

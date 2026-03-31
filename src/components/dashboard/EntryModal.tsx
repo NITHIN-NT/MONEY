@@ -9,34 +9,46 @@ interface EntryModalProps {
   onClose: () => void;
   type: "gave" | "borrowed" | "bank";
   currency: string;
-  onSave: (data: { bankName?: string; amount: number; contact?: string; date: string; promiseDate?: string }) => void;
+  initialData?: { id?: string; amount?: number; contact?: string; bankName?: string; promiseDate?: string } | null;
+  onSave: (data: { id?: string; bankName?: string; amount: number; contact?: string; date: string; promiseDate?: string }) => void;
   luxColors: {
     textMuted: string;
   };
 }
 
-export default function EntryModal({ show, onClose, type, currency, onSave, luxColors }: EntryModalProps) {
+export default function EntryModal({ show, onClose, type, currency, initialData, onSave, luxColors }: EntryModalProps) {
   const [amount, setAmount] = useState("");
   const [contact, setContact] = useState("");
   const [bankName, setBankName] = useState("");
   const [promiseDate, setPromiseDate] = useState("");
+
+  React.useEffect(() => {
+    if (show && initialData) {
+      setAmount(initialData.amount?.toString() || "");
+      setContact(initialData.contact || "");
+      setBankName(initialData.bankName || "");
+      setPromiseDate(initialData.promiseDate || "");
+    } else if (show) {
+      setAmount("");
+      setContact("");
+      setBankName("");
+      setPromiseDate("");
+    }
+  }, [show, initialData]);
 
   if (!show) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({ 
+      id: initialData?.id,
       amount: parseFloat(amount), 
       contact, 
       bankName, 
       promiseDate, 
       date: new Date().toISOString().split("T")[0] 
     });
-    // Reset form
-    setAmount("");
-    setContact("");
-    setBankName("");
-    setPromiseDate("");
+    onClose();
   };
 
   return (
@@ -52,9 +64,9 @@ export default function EntryModal({ show, onClose, type, currency, onSave, luxC
         </button>
 
         <div className="flex flex-col items-center mb-10 text-center">
-          <h3 className={`text-[10px] font-bold uppercase tracking-wider ${luxColors.textMuted} mb-3 font-sans`}>Add Item</h3>
+          <h3 className={`text-[10px] font-bold uppercase tracking-wider ${luxColors.textMuted} mb-3 font-sans`}>{initialData?.id ? 'Edit Item' : 'Add Item'}</h3>
           <h4 className="text-2xl font-luxury font-bold tracking-tighter lowercase">
-            New {type === "bank" ? "Account" : (type === "gave" ? "Lent Item" : "Borrowed Item")}
+            {initialData?.id ? 'Modify' : 'New'} {type === "bank" ? "Account" : (type === "gave" ? "Lent Item" : "Borrowed Item")}
           </h4>
         </div>
 
@@ -114,7 +126,7 @@ export default function EntryModal({ show, onClose, type, currency, onSave, luxC
           </div>
 
           <button type="submit" className="w-full py-5 bg-[#0F172A] text-white font-bold uppercase tracking-wider text-[10px] rounded-[16px] mt-8 shadow-xl hover:bg-[#0F172A] transition-all font-sans">
-            Save Entry
+            {initialData?.id ? 'Update Entry' : 'Save Entry'}
           </button>
         </div>
       </form>

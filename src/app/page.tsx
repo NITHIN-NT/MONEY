@@ -28,7 +28,7 @@ interface Transaction {
   type: "gave" | "borrowed";
   amount: number;
   contact: string;
-  risk: RiskLevel;
+  risk?: RiskLevel;
   date: string;
   promiseDate?: string;
   isSettled?: boolean;
@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"home" | "settings">("home");
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<"gave" | "borrowed" | "bank">("gave");
+  const [editingItem, setEditingItem] = useState<Transaction | null>(null);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (authUser) => {
@@ -86,7 +87,7 @@ export default function Dashboard() {
     setShowModal(true);
   };
 
-  const handleSaveEntry = (data: { bankName?: string; amount: number; contact?: string; date: string; promiseDate?: string }) => {
+  const handleSaveEntry = (data: { id?: string; bankName?: string; amount: number; contact?: string; date: string; promiseDate?: string }) => {
     if (modalType === "bank") {
       const newBank: BankAccount = {
         id: Math.random().toString(36).substr(2, 9),
@@ -95,19 +96,40 @@ export default function Dashboard() {
       };
       syncToCloud({ banks: [...bankAccounts, newBank] });
     } else {
-      const newTx: Transaction = {
-        id: Math.random().toString(36).substr(2, 9),
-        type: modalType as "gave" | "borrowed",
-        amount: data.amount,
-        contact: data.contact || "Unknown Contact",
-        risk: "Low",
-        date: data.date,
-        promiseDate: data.promiseDate,
-        isSettled: false,
-      };
-      syncToCloud({ transactions: [newTx, ...transactions] });
+      if (data.id) {
+        // Edit existing transaction
+        const newTx = transactions.map(tx => 
+          tx.id === data.id ? { ...tx, amount: data.amount, contact: data.contact || tx.contact, promiseDate: data.promiseDate } : tx
+        );
+        syncToCloud({ transactions: newTx });
+      } else {
+        // New transaction
+        const newTx: Transaction = {
+          id: Math.random().toString(36).substr(2, 9),
+          type: modalType as "gave" | "borrowed",
+          amount: data.amount,
+          contact: data.contact || "Unknown Contact",
+          risk: "Low",
+          date: data.date,
+          promiseDate: data.promiseDate,
+          isSettled: false,
+        };
+        syncToCloud({ transactions: [newTx, ...transactions] });
+      }
     }
     setShowModal(false);
+    setEditingItem(null);
+  };
+
+  const handleEditTransaction = (tx: Transaction) => {
+    setModalType(tx.type);
+    setEditingItem(tx);
+    setShowModal(true);
+  };
+
+  const handleDeleteTransaction = (id: string) => {
+    const newTx = transactions.filter(tx => tx.id !== id);
+    syncToCloud({ transactions: newTx });
   };
 
   const toggleSettle = (id: string) => {
@@ -121,14 +143,6 @@ export default function Dashboard() {
     const newBanks = bankAccounts.map(b => b.id === id ? { ...b, balance: newBalance } : b);
     syncToCloud({ banks: newBanks });
   };
-
-  const toggleType = (id: string) => {
-    const newTx = transactions.map(tx => 
-      tx.id === id ? { ...tx, type: (tx.type === 'gave' ? 'borrowed' : 'gave') as "gave" | "borrowed" } : tx
-    );
-    syncToCloud({ transactions: newTx });
-  };
-
   const totalBankBalance = bankAccounts.reduce((acc: number, curr: BankAccount) => acc + curr.balance, 0);
 
   const luxColors = {
@@ -174,12 +188,12 @@ export default function Dashboard() {
               onOpenForm={() => openForm("bank")}
               onEditBank={handleEditBank}
             />
-
             <ActivitySection 
               transactions={transactions}
               currency={currency}
-              onToggleType={toggleType}
               onToggleSettle={toggleSettle}
+              onEdit={handleEditTransaction}
+              onDelete={handleDeleteTransaction}
               luxColors={luxColors}
             />
           </>
@@ -189,14 +203,15 @@ export default function Dashboard() {
         {/* Empty footer area for free scrolling */}
         <div className="h-[15vh] transition-all" aria-hidden="true" />
       </section>
-
+ 
       <BottomNavbar onOpenForm={(type: "gave" | "borrowed" | "bank") => openForm(type)} activeTab={activeTab} onChangeTab={setActiveTab} />
-
+ 
       <EntryModal 
         show={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => { setShowModal(false); setEditingItem(null); }}
         type={modalType}
         currency={currency}
+        initialData={editingItem}
         onSave={handleSaveEntry}
         luxColors={luxColors}
       />
