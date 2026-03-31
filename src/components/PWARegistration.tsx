@@ -7,9 +7,12 @@ export default function PWARegistration() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/firebase-messaging-sw.js")
-        .then(() => {
+        .then((registration) => {
+          // Force an update check to clear duplicates
+          registration.update();
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error("Service worker registration failed:", err);
         });
     }
   }, []);

@@ -12,6 +12,7 @@ export default function OptionsSection() {
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState("");
   const [hasNotifications, setHasNotifications] = useState(false);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
   const currencies = [
     { code: "USD", symbol: "$", name: "US Dollar" },
@@ -114,24 +115,35 @@ export default function OptionsSection() {
           <div className="space-y-3">
              <button 
               onClick={async () => {
-                 if (hasNotifications) return;
-                 const { requestForToken } = await import("@/lib/firebase");
-                 const token = await requestForToken();
-                 if (token && auth.currentUser) {
-                    await updateDoc(doc(db, "users", auth.currentUser.uid), { fcmToken: token });
-                    setHasNotifications(true);
+                 if (hasNotifications || isLoadingNotifications) return;
+                 setIsLoadingNotifications(true);
+                 try {
+                   const { requestForToken } = await import("@/lib/firebase");
+                   const token = await requestForToken();
+                   if (token && auth.currentUser) {
+                      await updateDoc(doc(db, "users", auth.currentUser.uid), { fcmToken: token });
+                      setHasNotifications(true);
+                   }
+                 } catch (e) {
+                   console.error("Failed to enable notifications:", e);
+                 } finally {
+                   setIsLoadingNotifications(false);
                  }
               }}
-              disabled={hasNotifications}
-              className={`w-full flex items-center justify-between py-4 px-6 rounded-2xl transition-all ${hasNotifications ? 'bg-green-50 text-green-600' : 'bg-[#F8FAFC] hover:bg-[#0F172A] hover:text-white group/btn'}`}
+              disabled={hasNotifications || isLoadingNotifications}
+              className={`w-full flex items-center justify-between py-4 px-6 rounded-2xl transition-all ${hasNotifications ? 'bg-green-50 text-green-600' : 'bg-[#F8FAFC] hover:bg-[#0F172A] hover:text-white group/btn disabled:opacity-50'}`}
             >
               <span className="text-[10px] font-bold uppercase tracking-widest font-sans">
-                {hasNotifications ? "Notifications Enabled" : "Get Notifications"}
+                {isLoadingNotifications ? "Requesting..." : (hasNotifications ? "Notifications Enabled" : "Get Notifications")}
               </span>
               {hasNotifications ? (
                 <CheckCircle className="w-4 h-4" />
               ) : (
-                <AlertTriangle className="w-4 h-4 text-[#64748B] group-hover/btn:text-white" />
+                isLoadingNotifications ? (
+                  <RefreshCw className="w-4 h-4 animate-spin text-[#64748B]" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-[#64748B] group-hover/btn:text-white" />
+                )
               )}
             </button>
 

@@ -38,6 +38,7 @@ export const requestForToken = async () => {
   }
 
   try {
+    const registration = await navigator.serviceWorker.ready;
     const messaging = getMessaging(app);
     const validKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
     
@@ -45,9 +46,13 @@ export const requestForToken = async () => {
       return null;
     }
 
-    const currentToken = await getToken(messaging, { vapidKey: validKey });
+    const currentToken = await getToken(messaging, { 
+      serviceWorkerRegistration: registration,
+      vapidKey: validKey 
+    });
     return currentToken || null;
-  } catch {
+  } catch (err) {
+    console.error("Token request failed:", err);
     return null;
   }
 };
