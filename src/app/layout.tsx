@@ -7,13 +7,13 @@ const inter = Inter({
   variable: '--font-inter',
 });
 export const metadata: Metadata = {
-  title: "Money",
+  title: "MONEY",
   description: "High-end, private financial management",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Money",
+    title: "MONEY",
   },
 };
 

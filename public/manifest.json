@@ -1,6 +1,6 @@
 {
-  "name": "Money",
-  "short_name": "Money",
+  "name": "MONEY",
+  "short_name": "MONEY",
   "description": "High-end, private PWA financial tracker",
   "start_url": "/",
   "display": "standalone",

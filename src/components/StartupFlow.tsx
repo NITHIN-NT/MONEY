@@ -77,9 +77,9 @@ export default function StartupFlow({ user, onComplete }: StartupFlowProps) {
               initial={{ letterSpacing: "0.1em", opacity: 0 }}
               animate={{ letterSpacing: "0.3em", opacity: 1 }}
               transition={{ duration: 2.5, delay: 0.3 }}
-              className="text-4xl sm:text-7xl md:text-9xl font-luxury font-bold lowercase mb-10 md:mb-16 text-center whitespace-nowrap"
+              className="text-4xl sm:text-7xl md:text-9xl font-luxury font-bold mb-10 md:mb-16 text-center whitespace-nowrap"
             >
-              money
+              MONEY
             </motion.h1>
             <button
               onClick={handleLogin}
