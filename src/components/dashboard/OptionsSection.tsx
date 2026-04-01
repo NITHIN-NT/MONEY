@@ -12,7 +12,9 @@ export default function OptionsSection() {
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState("");
   const [hasNotifications, setHasNotifications] = useState(false);
+  const [dailyUpdates, setDailyUpdates] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+  const [isUpdatingDaily, setIsUpdatingDaily] = useState(false);
 
   const currencies = [
     { code: "USD", symbol: "$", name: "US Dollar" },
@@ -30,6 +32,7 @@ export default function OptionsSection() {
           const data = snap.data();
           setActiveCurrency(data.currency || "$");
           setHasNotifications(!!data.fcmToken);
+          setDailyUpdates(!!data.dailyUpdatesEnabled);
         }
       });
     }
@@ -144,6 +147,38 @@ export default function OptionsSection() {
                 ) : (
                   <AlertTriangle className="w-4 h-4 text-[#64748B] group-hover/btn:text-white" />
                 )
+              )}
+            </button>
+
+             <button 
+              onClick={async () => {
+                 if (!hasNotifications || isUpdatingDaily) return;
+                 setIsUpdatingDaily(true);
+                 try {
+                    const newValue = !dailyUpdates;
+                    await updateDoc(doc(db, "users", auth.currentUser!.uid), { dailyUpdatesEnabled: newValue });
+                    setDailyUpdates(newValue);
+                 } catch (e) {
+                    console.error("Failed to toggle daily updates:", e);
+                 } finally {
+                    setIsUpdatingDaily(false);
+                 }
+              }}
+              disabled={!hasNotifications || isUpdatingDaily}
+              className={`w-full flex items-center justify-between py-4 px-6 rounded-2xl transition-all ${!hasNotifications ? 'opacity-40 grayscale cursor-not-allowed' : 'bg-[#F8FAFC] hover:bg-[#0F172A] hover:text-white group/btn'} ${dailyUpdates && hasNotifications ? 'border-2 border-[#0F172A]/10' : ''}`}
+            >
+              <div className="flex flex-col items-start translate-y-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest font-sans">Daily Bank Updates</span>
+                <span className="text-[8px] uppercase tracking-[0.15em] opacity-60 font-sans mt-0.5">
+                   {dailyUpdates ? "Active Summary" : "Enable Daily Alerts"}
+                </span>
+              </div>
+              {isUpdatingDaily ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <div className={`w-10 h-5 rounded-full relative transition-colors duration-500 ${dailyUpdates ? 'bg-[#0F172A]' : 'bg-[#E2E8F0]'}`}>
+                  <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform duration-500 ${dailyUpdates ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
               )}
             </button>
 

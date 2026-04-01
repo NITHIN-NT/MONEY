@@ -15,6 +15,11 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "MONEY",
   },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+    shortcut: "/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {
