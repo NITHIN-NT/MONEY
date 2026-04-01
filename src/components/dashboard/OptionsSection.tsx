@@ -15,6 +15,7 @@ export default function OptionsSection() {
   const [dailyUpdates, setDailyUpdates] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [isUpdatingDaily, setIsUpdatingDaily] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "on" | "off" } | null>(null);
 
   const currencies = [
     { code: "USD", symbol: "$", name: "US Dollar" },
@@ -37,6 +38,13 @@ export default function OptionsSection() {
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const executeAction = async () => {
     if (!auth.currentUser) return;
@@ -158,6 +166,10 @@ export default function OptionsSection() {
                     const newValue = !dailyUpdates;
                     await updateDoc(doc(db, "users", auth.currentUser!.uid), { dailyUpdatesEnabled: newValue });
                     setDailyUpdates(newValue);
+                    setToast({ 
+                      message: newValue ? "Daily Bank Updates ON" : "Daily Bank Updates OFF", 
+                      type: newValue ? "on" : "off" 
+                    });
                  } catch (e) {
                     console.error("Failed to toggle daily updates:", e);
                  } finally {
@@ -286,6 +298,20 @@ export default function OptionsSection() {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PREMIUM NOTIFICATION TOAST */}
+      {toast && (
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className={`px-6 py-3 rounded-full backdrop-blur-xl border shadow-2xl flex items-center gap-3 ${
+            toast.type === 'on' 
+              ? 'bg-[#0F172A]/90 border-white/10 text-white' 
+              : 'bg-white/90 border-[#E2E8F0] text-[#0F172A]'
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${toast.type === 'on' ? 'bg-green-400' : 'bg-red-400'}`} />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] font-sans">{toast.message}</span>
           </div>
         </div>
       )}
