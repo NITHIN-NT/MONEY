@@ -174,7 +174,7 @@ export default function OptionsSection() {
                     // TRIGGER REAL SYSTEM NOTIFICATION
                     if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
                       const reg = await navigator.serviceWorker.ready;
-                      reg.showNotification("MONEY", {
+                      reg.showNotification("Daily Update", {
                         body: newValue ? "Daily Bank Updates: ENABLED" : "Daily Bank Updates: DISABLED",
                         icon: "/icon-192.png",
                         badge: "/icon-192.png",
