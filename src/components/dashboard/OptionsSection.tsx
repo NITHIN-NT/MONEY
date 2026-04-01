@@ -170,6 +170,16 @@ export default function OptionsSection() {
                       message: newValue ? "Daily Bank Updates ON" : "Daily Bank Updates OFF", 
                       type: newValue ? "on" : "off" 
                     });
+
+                    // TRIGGER REAL SYSTEM NOTIFICATION
+                    if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
+                      const reg = await navigator.serviceWorker.ready;
+                      reg.showNotification("MONEY", {
+                        body: newValue ? "Daily Bank Updates: ENABLED" : "Daily Bank Updates: DISABLED",
+                        icon: "/icon-192.png",
+                        badge: "/icon-192.png",
+                      });
+                    }
                  } catch (e) {
                     console.error("Failed to toggle daily updates:", e);
                  } finally {
