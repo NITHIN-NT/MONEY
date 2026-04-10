@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, ArrowRight, ArrowLeft, Bell } from "lucide-react";
+import { CheckCircle, ArrowRight, ArrowLeft, Bell, Users } from "lucide-react";
 import { User, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
@@ -192,6 +192,30 @@ export default function StartupFlow({ user, onComplete }: StartupFlowProps) {
 
         {step === 3 && (
           <motion.section
+            key="contacts"
+            {...variants}
+            className="flex-1 w-full max-w-lg px-6 md:px-20 flex flex-col items-center text-center justify-center"
+          >
+            <div className="w-16 h-16 md:w-24 md:h-24 bg-white shadow-[0_40px_80px_-15px_rgba(0,0,0,0.06)] border border-[#CBD5E1] rounded-[30px] md:rounded-[40px] flex items-center justify-center mb-10 md:mb-16">
+              <Users className="w-7 h-7 md:w-10 md:h-10 text-blue-500 opacity-80" />
+            </div>
+            <p className="text-[10px] md:text-[11px] uppercase font-bold tracking-widest text-[#64748B] mb-4 md:mb-6">Contacts</p>
+            <h2 className="text-3xl md:text-5xl font-luxury font-bold mb-6 md:mb-10 leading-none lowercase tracking-tighter">find people fast.</h2>
+            <p className="text-sm md:text-base text-[#64748B] mb-10 md:mb-20 leading-relaxed md:leading-loose px-4 md:px-6 font-sans">
+              Pick names directly from your phone&apos;s contacts when giving or borrowing money.
+            </p>
+
+            <button
+              onClick={nextStep}
+              className="w-full flex items-center justify-center gap-5 py-6 md:py-8 bg-[#0F172A] text-white font-bold uppercase tracking-widest text-[10px] md:text-[11px] rounded-[22px] md:rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] hover:scale-[1.02] transition-all active:scale-95"
+            >
+              Got it
+            </button>
+          </motion.section>
+        )}
+
+        {step === 4 && (
+          <motion.section
             key="launch"
             {...variants}
             className="flex-1 w-full max-w-lg px-6 md:px-20 flex flex-col items-center text-center justify-center"
@@ -221,7 +245,7 @@ export default function StartupFlow({ user, onComplete }: StartupFlowProps) {
       {step > 0 && (
         <div className="w-full flex justify-center items-center py-10 md:py-16">
           <div className="flex gap-8 md:gap-16">
-            {[1, 2, 3].map((i) => (
+            {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
                 className={`h-px w-6 md:w-12 transition-all duration-1000 rounded-full ${step >= i ? "bg-[#0F172A]" : "bg-[#CBD5E1]"

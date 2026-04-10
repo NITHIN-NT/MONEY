@@ -11,6 +11,7 @@ const ActivitySection = dynamic(() => import("@/components/dashboard/ActivitySec
 const EntryModal = dynamic(() => import("@/components/dashboard/EntryModal").then(mod => mod.default), { ssr: false });
 const BottomNavbar = dynamic(() => import("@/components/dashboard/BottomNavbar").then(mod => mod.default));
 const OptionsSection = dynamic(() => import("@/components/dashboard/OptionsSection").then(mod => mod.default), { ssr: false });
+const FeatureHighlight = dynamic(() => import("@/components/dashboard/FeatureHighlight").then(mod => mod.default), { ssr: false });
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
@@ -44,6 +45,7 @@ export default function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<"gave" | "borrowed" | "bank">("gave");
   const [editingItem, setEditingItem] = useState<Transaction | null>(null);
+  const [showUpdateHighlight, setShowUpdateHighlight] = useState(false);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (authUser) => {
@@ -57,6 +59,9 @@ export default function Dashboard() {
             setBankAccounts(data.banks || []);
             setTransactions(data.transactions || []);
             setIsOnboarded(data.isOnboarded === true);
+            if (data.isOnboarded === true && data.hasSeenContactUpdate !== true) {
+              setShowUpdateHighlight(true);
+            }
           } else {
             setIsOnboarded(false);
           }
@@ -214,6 +219,14 @@ export default function Dashboard() {
         initialData={editingItem}
         onSave={handleSaveEntry}
         luxColors={luxColors}
+      />
+
+      <FeatureHighlight 
+        show={showUpdateHighlight} 
+        onClose={() => {
+          setShowUpdateHighlight(false);
+          syncToCloud({ hasSeenContactUpdate: true });
+        }}
       />
     </main>
   );

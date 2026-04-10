@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { AlertTriangle, Download, RefreshCw, Trash2, Globe, ShieldAlert, X, CheckCircle } from "lucide-react";
+import { AlertTriangle, Download, RefreshCw, Trash2, Globe, ShieldAlert, X, CheckCircle, Users } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { doc, getDoc, deleteDoc, updateDoc } from "firebase/firestore";
@@ -15,6 +15,7 @@ export default function OptionsSection() {
   const [dailyUpdates, setDailyUpdates] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [isUpdatingDaily, setIsUpdatingDaily] = useState(false);
+  const [isContactSupported, setIsContactSupported] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "on" | "off" } | null>(null);
 
   const currencies = [
@@ -37,6 +38,7 @@ export default function OptionsSection() {
         }
       });
     }
+    setIsContactSupported('contacts' in navigator && 'ContactsManager' in window);
   }, []);
 
   useEffect(() => {
@@ -211,6 +213,28 @@ export default function OptionsSection() {
               <span className="text-[10px] font-bold uppercase tracking-widest font-sans">Change Currency</span>
               <RefreshCw className="w-4 h-4 text-[#64748B] group-hover/btn:text-white" />
             </button>
+          </div>
+        </div>
+
+        <div className="group p-6 bg-white rounded-[28px] border border-[#E2E8F0] shadow-sm hover:shadow-xl transition-all duration-700">
+          <div className="flex items-center gap-4 mb-6">
+             <div className="w-10 h-10 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] group-hover:bg-[#0F172A] group-hover:text-white transition-colors">
+               <Users className="w-5 h-5" />
+             </div>
+             <div>
+               <h4 className="text-xl font-luxury font-bold tracking-tight lowercase">phone contacts</h4>
+               <p className={`text-[9px] uppercase tracking-widest font-sans ${isContactSupported ? 'text-[#059669]' : 'text-amber-600'}`}>
+                 {isContactSupported ? 'Ready to use' : 'Not available on this device'}
+               </p>
+             </div>
+          </div>
+          <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-[#E2E8F0]/50">
+            <p className="text-[11px] leading-relaxed text-[#64748B] font-sans">
+              {isContactSupported 
+                ? "You can quickly find people in your contacts list when adding new entries."
+                : "Your browser doesn't support contact searching. This feature works best on a phone."
+              }
+            </p>
           </div>
         </div>
 

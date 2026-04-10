@@ -1,8 +1,8 @@
 
 "use client";
 
-import React, { useState } from "react";
-import { X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Users } from "lucide-react";
 
 interface EntryModalProps {
   show: boolean;
@@ -21,6 +21,30 @@ export default function EntryModal({ show, onClose, type, currency, initialData,
   const [contact, setContact] = useState("");
   const [bankName, setBankName] = useState("");
   const [promiseDate, setPromiseDate] = useState("");
+  const [isContactPickerSupported, setIsContactPickerSupported] = useState(false);
+
+  useEffect(() => {
+    const checkSupport = () => {
+      const supported = 'contacts' in navigator && 'ContactsManager' in window;
+      setIsContactPickerSupported(supported);
+    };
+    checkSupport();
+  }, []);
+
+  const handleContactPick = async () => {
+    try {
+      const props = ["name"];
+      const opts = { multiple: false };
+      // @ts-expect-error - Contact Picker API is modern and might missing in standard types
+      const contacts = await navigator.contacts.select(props, opts);
+      
+      if (contacts.length > 0 && contacts[0].name?.length > 0) {
+        setContact(contacts[0].name[0]);
+      }
+    } catch (err) {
+      console.error("Contact Picker Error:", err);
+    }
+  };
 
   React.useEffect(() => {
     if (show && initialData) {
@@ -101,16 +125,28 @@ export default function EntryModal({ show, onClose, type, currency, initialData,
               </div>
             ) : (
               <>
-                <div className="flex flex-col gap-2 text-center">
+                <div className="flex flex-col gap-2 text-center relative group/input">
                   <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Person&apos;s Name</label>
-                  <input 
-                    type="text" 
-                    value={contact} 
-                    onChange={(e) => setContact(e.target.value)} 
-                    placeholder="e.g. John Smith" 
-                    className="bg-transparent w-full font-luxury font-bold text-2xl outline-none text-center text-[#0F172A] placeholder:opacity-30 font-sans" 
-                    required 
-                  />
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      value={contact} 
+                      onChange={(e) => setContact(e.target.value)} 
+                      placeholder="e.g. John Smith" 
+                      className="bg-transparent w-full font-luxury font-bold text-2xl outline-none text-center text-[#0F172A] placeholder:opacity-30 font-sans pr-10" 
+                      required 
+                    />
+                    {isContactPickerSupported && (
+                      <button
+                        type="button"
+                        onClick={handleContactPick}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-[#F1F5F9] text-[#64748B] hover:bg-[#0F172A] hover:text-white transition-all active:scale-90 shadow-sm"
+                        title="Select from contacts"
+                      >
+                        <Users className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2 text-center">
                   <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Due Date</label>
