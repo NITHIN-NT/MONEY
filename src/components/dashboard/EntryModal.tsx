@@ -10,13 +10,14 @@ interface EntryModalProps {
   type: "gave" | "borrowed" | "bank";
   currency: string;
   initialData?: { id?: string; amount?: number; contact?: string; bankName?: string; promiseDate?: string } | null;
+  recentContacts?: string[];
   onSave: (data: { id?: string; bankName?: string; amount: number; contact?: string; date: string; promiseDate?: string }) => void;
   luxColors: {
     textMuted: string;
   };
 }
 
-export default function EntryModal({ show, onClose, type, currency, initialData, onSave, luxColors }: EntryModalProps) {
+export default function EntryModal({ show, onClose, type, currency, initialData, recentContacts = [], onSave, luxColors }: EntryModalProps) {
   const [amount, setAmount] = useState("");
   const [contact, setContact] = useState("");
   const [bankName, setBankName] = useState("");
@@ -126,17 +127,23 @@ export default function EntryModal({ show, onClose, type, currency, initialData,
             ) : (
               <>
                 <div className="flex flex-col gap-2 text-center relative group/input">
-                  <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Person&apos;s Name</label>
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      value={contact} 
-                      onChange={(e) => setContact(e.target.value)} 
-                      placeholder="e.g. John Smith" 
-                      className="bg-transparent w-full font-luxury font-bold text-2xl outline-none text-center text-[#0F172A] placeholder:opacity-30 font-sans pr-10" 
-                      required 
-                    />
-                    {isContactPickerSupported && (
+                    <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Person&apos;s Name</label>
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        value={contact} 
+                        onChange={(e) => setContact(e.target.value)} 
+                        placeholder="e.g. John Smith" 
+                        list="recent-contacts"
+                        className="bg-transparent w-full font-luxury font-bold text-2xl outline-none text-center text-[#0F172A] placeholder:opacity-30 font-sans pr-10" 
+                        required 
+                      />
+                      <datalist id="recent-contacts">
+                        {recentContacts.map(name => (
+                          <option key={name} value={name} />
+                        ))}
+                      </datalist>
+                      {isContactPickerSupported && (
                       <button
                         type="button"
                         onClick={handleContactPick}
@@ -147,6 +154,24 @@ export default function EntryModal({ show, onClose, type, currency, initialData,
                       </button>
                     )}
                   </div>
+
+                  {recentContacts.length > 0 && (
+                    <div className="flex flex-col gap-3 mt-4">
+                      <p className="text-[8px] font-bold uppercase tracking-widest text-[#64748B] opacity-60">Recent People</p>
+                      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1 -mx-1">
+                        {recentContacts.slice(0, 5).map((name) => (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => setContact(name)}
+                            className="shrink-0 px-4 py-2 bg-[#F1F5F9] hover:bg-[#0F172A] hover:text-white text-[#0F172A] text-[10px] font-bold rounded-full transition-all active:scale-90 border border-[#E2E8F0]"
+                          >
+                            {name.split(' ')[0]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col gap-2 text-center">
                   <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Due Date</label>

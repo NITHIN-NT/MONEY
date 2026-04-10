@@ -222,17 +222,17 @@ export default function OptionsSection() {
                <Users className="w-5 h-5" />
              </div>
              <div>
-               <h4 className="text-xl font-luxury font-bold tracking-tight lowercase">phone contacts</h4>
+               <h4 className="text-xl font-luxury font-bold tracking-tight lowercase">smart contacts</h4>
                <p className={`text-[9px] uppercase tracking-widest font-sans ${isContactSupported ? 'text-[#059669]' : 'text-amber-600'}`}>
-                 {isContactSupported ? 'Ready to use' : 'Not available on this device'}
+                 {isContactSupported ? 'Phone Sync Ready' : 'using recent memory'}
                </p>
              </div>
           </div>
           <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-[#E2E8F0]/50">
             <p className="text-[11px] leading-relaxed text-[#64748B] font-sans">
               {isContactSupported 
-                ? "You can quickly find people in your contacts list when adding new entries."
-                : "Your browser doesn't support contact searching. This feature works best on a phone."
+                ? "You can quickly find people in your phone contacts and recent entries."
+                : "Phone sync is restricted on Safari, but your recent people are always remembered for fast select."
               }
             </p>
           </div>

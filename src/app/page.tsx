@@ -79,7 +79,7 @@ export default function Dashboard() {
     return curr.type === "gave" ? acc + curr.amount : acc - curr.amount;
   }, 0);
 
-  const syncToCloud = async (updates: Partial<{ currency: string; banks: BankAccount[]; transactions: Transaction[]; isOnboarded: boolean; fcmToken: string; }>) => {
+  const syncToCloud = async (updates: Partial<{ currency: string; banks: BankAccount[]; transactions: Transaction[]; isOnboarded: boolean; fcmToken: string; hasSeenContactUpdate: boolean; }>) => {
     if (!user) return;
     try {
       await setDoc(doc(db, "users", user.uid), updates, { merge: true });
@@ -149,6 +149,8 @@ export default function Dashboard() {
     syncToCloud({ banks: newBanks });
   };
   const totalBankBalance = bankAccounts.reduce((acc: number, curr: BankAccount) => acc + curr.balance, 0);
+  
+  const recentContacts = Array.from(new Set(transactions.map(tx => tx.contact))).filter(name => name && name !== "Unknown Contact");
 
   const luxColors = {
     bg: "bg-[#F2F4F7]",
@@ -217,6 +219,7 @@ export default function Dashboard() {
         type={modalType}
         currency={currency}
         initialData={editingItem}
+        recentContacts={recentContacts}
         onSave={handleSaveEntry}
         luxColors={luxColors}
       />
