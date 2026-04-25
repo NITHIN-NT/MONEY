@@ -1,17 +1,17 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { X, Users } from "lucide-react";
 
 interface EntryModalProps {
   show: boolean;
   onClose: () => void;
-  type: "gave" | "borrowed" | "bank";
+  type: "gave" | "borrowed";
   currency: string;
-  initialData?: { id?: string; amount?: number; contact?: string; bankName?: string; promiseDate?: string } | null;
+  initialData?: { id?: string; amount?: number; contact?: string; promiseDate?: string } | null;
   recentContacts?: string[];
-  onSave: (data: { id?: string; bankName?: string; amount: number; contact?: string; date: string; promiseDate?: string }) => void;
+  onSave: (data: { id?: string; amount: number; contact?: string; date: string; promiseDate?: string }) => void;
   luxColors: {
     textMuted: string;
   };
@@ -20,7 +20,6 @@ interface EntryModalProps {
 export default function EntryModal({ show, onClose, type, currency, initialData, recentContacts = [], onSave, luxColors }: EntryModalProps) {
   const [amount, setAmount] = useState("");
   const [contact, setContact] = useState("");
-  const [bankName, setBankName] = useState("");
   const [promiseDate, setPromiseDate] = useState("");
   const [isContactPickerSupported, setIsContactPickerSupported] = useState(false);
 
@@ -47,29 +46,28 @@ export default function EntryModal({ show, onClose, type, currency, initialData,
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (show && initialData) {
       setAmount(initialData.amount?.toString() || "");
       setContact(initialData.contact || "");
-      setBankName(initialData.bankName || "");
       setPromiseDate(initialData.promiseDate || "");
     } else if (show) {
       setAmount("");
       setContact("");
-      setBankName("");
       setPromiseDate("");
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [show, initialData]);
 
   if (!show) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onSave({ 
       id: initialData?.id,
       amount: parseFloat(amount), 
       contact, 
-      bankName, 
       promiseDate, 
       date: new Date().toISOString().split("T")[0] 
     });
@@ -91,7 +89,7 @@ export default function EntryModal({ show, onClose, type, currency, initialData,
         <div className="flex flex-col items-center mb-10 text-center">
           <h3 className={`text-[10px] font-bold uppercase tracking-wider ${luxColors.textMuted} mb-3 font-sans`}>{initialData?.id ? 'Edit Item' : 'Add Item'}</h3>
           <h4 className="text-2xl font-luxury font-bold tracking-tighter lowercase">
-            {initialData?.id ? 'Modify' : 'New'} {type === "bank" ? "Account" : (type === "gave" ? "Lent Item" : "Borrowed Item")}
+            {initialData?.id ? 'Modify' : 'New'} {type === "gave" ? "Lent Item" : "Borrowed Item"}
           </h4>
         </div>
 
@@ -112,78 +110,62 @@ export default function EntryModal({ show, onClose, type, currency, initialData,
           </div>
 
           <div className="space-y-6 pt-10 border-t border-[#E2E8F0]">
-            {type === 'bank' ? (
-              <div className="flex flex-col gap-2 text-center">
-                <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Account Name</label>
-                <input 
-                  type="text" 
-                  value={bankName} 
-                  onChange={(e) => setBankName(e.target.value)} 
-                  placeholder="e.g. Chase / Savings" 
-                  className="bg-transparent w-full font-luxury font-bold text-2xl outline-none text-center text-[#0F172A] placeholder:opacity-30 font-sans" 
-                  required 
-                />
-              </div>
-            ) : (
-              <>
-                <div className="flex flex-col gap-2 text-center relative group/input">
-                    <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Person&apos;s Name</label>
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        value={contact} 
-                        onChange={(e) => setContact(e.target.value)} 
-                        placeholder="e.g. John Smith" 
-                        list="recent-contacts"
-                        className="bg-transparent w-full font-luxury font-bold text-2xl outline-none text-center text-[#0F172A] placeholder:opacity-30 font-sans pr-10" 
-                        required 
-                      />
-                      <datalist id="recent-contacts">
-                        {recentContacts.map(name => (
-                          <option key={name} value={name} />
-                        ))}
-                      </datalist>
-                      {isContactPickerSupported && (
-                      <button
-                        type="button"
-                        onClick={handleContactPick}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-[#F1F5F9] text-[#64748B] hover:bg-[#0F172A] hover:text-white transition-all active:scale-90 shadow-sm"
-                        title="Select from contacts"
-                      >
-                        <Users className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-
-                  {recentContacts.length > 0 && (
-                    <div className="flex flex-col gap-3 mt-4">
-                      <p className="text-[8px] font-bold uppercase tracking-widest text-[#64748B] opacity-60">Recent People</p>
-                      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1 -mx-1">
-                        {recentContacts.slice(0, 5).map((name) => (
-                          <button
-                            key={name}
-                            type="button"
-                            onClick={() => setContact(name)}
-                            className="shrink-0 px-4 py-2 bg-[#F1F5F9] hover:bg-[#0F172A] hover:text-white text-[#0F172A] text-[10px] font-bold rounded-full transition-all active:scale-90 border border-[#E2E8F0]"
-                          >
-                            {name.split(' ')[0]}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col gap-2 text-center">
-                  <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Due Date</label>
+            <div className="flex flex-col gap-2 text-center relative group/input">
+                <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Person&apos;s Name</label>
+                <div className="relative">
                   <input 
-                    type="date" 
-                    value={promiseDate} 
-                    onChange={(e) => setPromiseDate(e.target.value)} 
-                    className="bg-transparent w-full font-bold text-lg outline-none text-center text-[#0F172A] font-sans" 
+                    type="text" 
+                    value={contact} 
+                    onChange={(e) => setContact(e.target.value)} 
+                    placeholder="e.g. John Smith" 
+                    list="recent-contacts"
+                    className="bg-transparent w-full font-luxury font-bold text-2xl outline-none text-center text-[#0F172A] placeholder:opacity-30 font-sans pr-10" 
+                    required 
                   />
+                  <datalist id="recent-contacts">
+                    {recentContacts.map(name => (
+                      <option key={name} value={name} />
+                    ))}
+                  </datalist>
+                  {isContactPickerSupported && (
+                  <button
+                    type="button"
+                    onClick={handleContactPick}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-[#F1F5F9] text-[#64748B] hover:bg-[#0F172A] hover:text-white transition-all active:scale-90 shadow-sm"
+                    title="Select from contacts"
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {recentContacts.length > 0 && (
+                <div className="flex flex-col gap-3 mt-4">
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-[#64748B] opacity-60">Recent People</p>
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1 -mx-1">
+                    {recentContacts.slice(0, 5).map((name) => (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => setContact(name)}
+                        className="shrink-0 px-4 py-2 bg-[#F1F5F9] hover:bg-[#0F172A] hover:text-white text-[#0F172A] text-[10px] font-bold rounded-full transition-all active:scale-90 border border-[#E2E8F0]"
+                      >
+                        {name.split(' ')[0]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </>
-            )}
+              )}
+            </div>
+            <div className="flex flex-col gap-2 text-center">
+              <label className={`text-[9px] font-bold uppercase ${luxColors.textMuted} tracking-wider font-sans`}>Due Date</label>
+              <input 
+                type="date" 
+                value={promiseDate} 
+                onChange={(e) => setPromiseDate(e.target.value)} 
+                className="bg-transparent w-full font-bold text-lg outline-none text-center text-[#0F172A] font-sans" 
+              />
+            </div>
           </div>
 
           <button type="submit" className="w-full py-5 bg-[#0F172A] text-white font-bold uppercase tracking-wider text-[10px] rounded-[16px] mt-8 shadow-xl hover:bg-[#0F172A] transition-all font-sans">

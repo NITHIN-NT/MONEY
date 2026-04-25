@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
 const StartupFlow = dynamic(() => import("@/components/StartupFlow").then(mod => mod.default), { ssr: false });
 const Header = dynamic(() => import("@/components/dashboard/Header").then(mod => mod.default));
 const SummarySection = dynamic(() => import("@/components/dashboard/SummarySection").then(mod => mod.default));
-const BankSection = dynamic(() => import("@/components/dashboard/BankSection").then(mod => mod.default));
 const ActivitySection = dynamic(() => import("@/components/dashboard/ActivitySection").then(md => md.default));
 const EntryModal = dynamic(() => import("@/components/dashboard/EntryModal").then(mod => mod.default), { ssr: false });
 const BottomNavbar = dynamic(() => import("@/components/dashboard/BottomNavbar").then(mod => mod.default));
@@ -17,12 +16,6 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
 
 type RiskLevel = "Low" | "Medium" | "High";
-
-interface BankAccount {
-  id: string;
-  name: string;
-  balance: number;
-}
 
 interface Transaction {
   id: string;
@@ -39,11 +32,10 @@ export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
   const [currency, setCurrency] = useState("$");
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [activeTab, setActiveTab] = useState<"home" | "settings">("home");
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState<"gave" | "borrowed" | "bank">("gave");
+  const [modalType, setModalType] = useState<"gave" | "borrowed">("gave");
   const [editingItem, setEditingItem] = useState<Transaction | null>(null);
   const [showUpdateHighlight, setShowUpdateHighlight] = useState(false);
 
@@ -56,7 +48,6 @@ export default function Dashboard() {
           if (snap.exists()) {
             const data = snap.data();
             setCurrency(data.currency || "$");
-            setBankAccounts(data.banks || []);
             setTransactions(data.transactions || []);
             setIsOnboarded(data.isOnboarded === true);
             if (data.isOnboarded === true && data.hasSeenContactUpdate !== true) {
@@ -79,7 +70,7 @@ export default function Dashboard() {
     return curr.type === "gave" ? acc + curr.amount : acc - curr.amount;
   }, 0);
 
-  const syncToCloud = async (updates: Partial<{ currency: string; banks: BankAccount[]; transactions: Transaction[]; isOnboarded: boolean; fcmToken: string; hasSeenContactUpdate: boolean; }>) => {
+  const syncToCloud = async (updates: Partial<{ currency: string; transactions: Transaction[]; isOnboarded: boolean; fcmToken: string; hasSeenContactUpdate: boolean; }>) => {
     if (!user) return;
     try {
       await setDoc(doc(db, "users", user.uid), updates, { merge: true });
@@ -87,40 +78,31 @@ export default function Dashboard() {
     }
   };
 
-  const openForm = (type: "gave" | "borrowed" | "bank") => {
+  const openForm = (type: "gave" | "borrowed") => {
     setModalType(type);
     setShowModal(true);
   };
 
-  const handleSaveEntry = (data: { id?: string; bankName?: string; amount: number; contact?: string; date: string; promiseDate?: string }) => {
-    if (modalType === "bank") {
-      const newBank: BankAccount = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: data.bankName || "Unknown Bank",
-        balance: data.amount,
-      };
-      syncToCloud({ banks: [...bankAccounts, newBank] });
+  const handleSaveEntry = (data: { id?: string; amount: number; contact?: string; date: string; promiseDate?: string }) => {
+    if (data.id) {
+      // Edit existing transaction
+      const newTx = transactions.map(tx => 
+        tx.id === data.id ? { ...tx, amount: data.amount, contact: data.contact || tx.contact, promiseDate: data.promiseDate } : tx
+      );
+      syncToCloud({ transactions: newTx });
     } else {
-      if (data.id) {
-        // Edit existing transaction
-        const newTx = transactions.map(tx => 
-          tx.id === data.id ? { ...tx, amount: data.amount, contact: data.contact || tx.contact, promiseDate: data.promiseDate } : tx
-        );
-        syncToCloud({ transactions: newTx });
-      } else {
-        // New transaction
-        const newTx: Transaction = {
-          id: Math.random().toString(36).substr(2, 9),
-          type: modalType as "gave" | "borrowed",
-          amount: data.amount,
-          contact: data.contact || "Unknown Contact",
-          risk: "Low",
-          date: data.date,
-          promiseDate: data.promiseDate,
-          isSettled: false,
-        };
-        syncToCloud({ transactions: [newTx, ...transactions] });
-      }
+      // New transaction
+      const newTx: Transaction = {
+        id: Math.random().toString(36).substr(2, 9),
+        type: modalType,
+        amount: data.amount,
+        contact: data.contact || "Unknown Contact",
+        risk: "Low",
+        date: data.date,
+        promiseDate: data.promiseDate,
+        isSettled: false,
+      };
+      syncToCloud({ transactions: [newTx, ...transactions] });
     }
     setShowModal(false);
     setEditingItem(null);
@@ -144,12 +126,6 @@ export default function Dashboard() {
     syncToCloud({ transactions: newTx });
   };
 
-  const handleEditBank = (id: string, newBalance: number) => {
-    const newBanks = bankAccounts.map(b => b.id === id ? { ...b, balance: newBalance } : b);
-    syncToCloud({ banks: newBanks });
-  };
-  const totalBankBalance = bankAccounts.reduce((acc: number, curr: BankAccount) => acc + curr.balance, 0);
-  
   const recentContacts = Array.from(new Set(transactions.map(tx => tx.contact))).filter(name => name && name !== "Unknown Contact");
 
   const luxColors = {
@@ -169,7 +145,6 @@ export default function Dashboard() {
         await setDoc(doc(db, "users", user.uid), {
            isOnboarded: true,
            currency: cur,
-           banks: [],
            transactions: []
         }, { merge: true });
       }
@@ -184,17 +159,10 @@ export default function Dashboard() {
           <>
             <SummarySection 
               currency={currency}
-              totalBankBalance={totalBankBalance}
               balance={balance}
               luxColors={luxColors}
             />
 
-            <BankSection 
-              bankAccounts={bankAccounts}
-              currency={currency}
-              onOpenForm={() => openForm("bank")}
-              onEditBank={handleEditBank}
-            />
             <ActivitySection 
               transactions={transactions}
               currency={currency}
@@ -211,7 +179,7 @@ export default function Dashboard() {
         <div className="h-[15vh] transition-all" aria-hidden="true" />
       </section>
  
-      <BottomNavbar onOpenForm={(type: "gave" | "borrowed" | "bank") => openForm(type)} activeTab={activeTab} onChangeTab={setActiveTab} />
+      <BottomNavbar onOpenForm={(type: "gave" | "borrowed") => openForm(type)} activeTab={activeTab} onChangeTab={setActiveTab} />
  
       <EntryModal 
         show={showModal}

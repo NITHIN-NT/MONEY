@@ -9,6 +9,7 @@
  * Run: node broadcast-notification.js
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 require('dotenv').config({ path: '.env.local' });
 const admin = require('firebase-admin');
 

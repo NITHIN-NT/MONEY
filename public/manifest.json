@@ -2,8 +2,10 @@
   "name": "MONEY",
   "short_name": "MONEY",
   "description": "High-end, private PWA financial tracker",
+  "id": "/",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f8fafc",
   "theme_color": "#ffffff",
   "icons": [
@@ -14,7 +16,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

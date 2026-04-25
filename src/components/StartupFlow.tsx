@@ -74,12 +74,12 @@ export default function StartupFlow({ user, onComplete }: StartupFlowProps) {
             className="flex-1 flex flex-col items-center justify-center w-full"
           >
             <motion.h1
-              initial={{ letterSpacing: "0.1em", opacity: 0 }}
-              animate={{ letterSpacing: "0.3em", opacity: 1 }}
-              transition={{ duration: 2.5, delay: 0.3 }}
-              className="text-4xl sm:text-7xl md:text-9xl font-luxury font-bold mb-10 md:mb-16 text-center whitespace-nowrap"
+              initial={{ letterSpacing: "-0.05em", opacity: 0, y: 20 }}
+              animate={{ letterSpacing: "-0.02em", opacity: 1, y: 0 }}
+              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-7xl md:text-9xl font-bold mb-10 md:mb-16 text-center whitespace-nowrap lowercase font-sans tracking-tighter"
             >
-              MONEY
+              money
             </motion.h1>
             <button
               onClick={handleLogin}

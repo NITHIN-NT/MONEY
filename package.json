@@ -11,6 +11,7 @@
   "dependencies": {
     "@libsql/client": "^0.17.2",
     "@neondatabase/serverless": "^1.0.2",
+    "@next/swc-darwin-arm64": "^16.2.4",
     "dotenv": "^17.4.1",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",

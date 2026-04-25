@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { AlertTriangle, Download, RefreshCw, Trash2, Globe, ShieldAlert, X, CheckCircle, Users } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
@@ -12,9 +12,7 @@ export default function OptionsSection() {
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState("");
   const [hasNotifications, setHasNotifications] = useState(false);
-  const [dailyUpdates, setDailyUpdates] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
-  const [isUpdatingDaily, setIsUpdatingDaily] = useState(false);
   const [isContactSupported, setIsContactSupported] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "on" | "off" } | null>(null);
 
@@ -34,7 +32,6 @@ export default function OptionsSection() {
           const data = snap.data();
           setActiveCurrency(data.currency || "$");
           setHasNotifications(!!data.fcmToken);
-          setDailyUpdates(!!data.dailyUpdatesEnabled);
         }
       });
     }
@@ -161,52 +158,6 @@ export default function OptionsSection() {
             </button>
 
              <button 
-              onClick={async () => {
-                 if (!hasNotifications || isUpdatingDaily) return;
-                 setIsUpdatingDaily(true);
-                 try {
-                    const newValue = !dailyUpdates;
-                    await updateDoc(doc(db, "users", auth.currentUser!.uid), { dailyUpdatesEnabled: newValue });
-                    setDailyUpdates(newValue);
-                    setToast({ 
-                      message: newValue ? "Daily Bank Updates ON" : "Daily Bank Updates OFF", 
-                      type: newValue ? "on" : "off" 
-                    });
-
-                    // TRIGGER REAL SYSTEM NOTIFICATION
-                    if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
-                      const reg = await navigator.serviceWorker.ready;
-                      reg.showNotification("Daily Update", {
-                        body: newValue ? "Daily Bank Updates: ENABLED" : "Daily Bank Updates: DISABLED",
-                        icon: "/icon-192.png",
-                        badge: "/icon-192.png",
-                      });
-                    }
-                 } catch (e) {
-                    console.error("Failed to toggle daily updates:", e);
-                 } finally {
-                    setIsUpdatingDaily(false);
-                 }
-              }}
-              disabled={!hasNotifications || isUpdatingDaily}
-              className={`w-full flex items-center justify-between py-4 px-6 rounded-2xl transition-all ${!hasNotifications ? 'opacity-40 grayscale cursor-not-allowed' : 'bg-[#F8FAFC] hover:bg-[#0F172A] hover:text-white group/btn'} ${dailyUpdates && hasNotifications ? 'border-2 border-[#0F172A]/10' : ''}`}
-            >
-              <div className="flex flex-col items-start translate-y-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest font-sans">Daily Bank Updates</span>
-                <span className="text-[8px] uppercase tracking-[0.15em] opacity-60 font-sans mt-0.5">
-                   {dailyUpdates ? "Active Summary" : "Enable Daily Alerts"}
-                </span>
-              </div>
-              {isUpdatingDaily ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <div className={`w-10 h-5 rounded-full relative transition-colors duration-500 ${dailyUpdates ? 'bg-[#0F172A]' : 'bg-[#E2E8F0]'}`}>
-                  <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform duration-500 ${dailyUpdates ? 'translate-x-5' : 'translate-x-0'}`} />
-                </div>
-              )}
-            </button>
-
-             <button 
               onClick={() => setShowCurrencyModal(true)}
               className="w-full flex items-center justify-between py-4 px-6 bg-[#F8FAFC] hover:bg-[#0F172A] hover:text-white transition-colors rounded-2xl group/btn"
             >
@@ -236,6 +187,45 @@ export default function OptionsSection() {
               }
             </p>
           </div>
+        </div>
+
+        <div className="group p-6 bg-white rounded-[28px] border border-[#E2E8F0] shadow-sm hover:shadow-xl transition-all duration-700">
+          <div className="flex items-center gap-4 mb-6">
+             <div className="w-10 h-10 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] group-hover:bg-[#0F172A] group-hover:text-white transition-colors">
+               <Download className="w-5 h-5" />
+             </div>
+              <div>
+               <h4 className="text-xl font-luxury font-bold tracking-tight lowercase">Install App</h4>
+               <p className="text-[9px] uppercase tracking-widest text-[#64748B] font-sans">For the best experience</p>
+             </div>
+          </div>
+          
+          <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-[#E2E8F0]/50 mb-4">
+            <p className="text-[11px] leading-relaxed text-[#64748B] font-sans">
+              Install MONEY to your home screen for instant access, offline support, and a full-screen premium experience.
+            </p>
+          </div>
+
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) ? (
+            <div className="w-full py-4 px-6 bg-green-50 text-green-600 rounded-2xl flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-widest font-sans">App Installed</span>
+              <CheckCircle className="w-4 h-4" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <p className="text-[10px] font-bold text-amber-900 uppercase tracking-wider mb-2 font-sans flex items-center gap-2">
+                  <Globe className="w-3 h-3" /> Safari / iOS Instructions:
+                </p>
+                <ol className="text-[10px] text-amber-800 space-y-2 list-decimal list-inside font-sans">
+                  <li>Tap the <strong>Share</strong> button <span className="opacity-50">(square with arrow)</span></li>
+                  <li>Scroll down and select <strong>&quot;Add to Home Screen&quot;</strong></li>
+                  <li>Tap <strong>Add</strong> to finish</li>
+                </ol>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="group p-6 bg-white rounded-[28px] border border-[#E2E8F0] shadow-sm hover:shadow-xl transition-all duration-700">
