@@ -2,6 +2,7 @@
 
 import React, { useState, memo } from "react";
 import { RotateCcw, Calendar, AlertCircle, ChevronLeft, ChevronRight, Pencil, Trash2, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Transaction {
   id: string;
@@ -97,41 +98,100 @@ const ActivitySection = memo(({
                 </div>
 
                 <div className="flex items-center">
-                  {expandedId === tx.id ? (
-                    <div className="flex gap-1 items-center animate-in slide-in-from-right duration-300 bg-[#E2E8F0]/40 p-1 rounded-full border border-[#E2E8F0] z-10">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onEdit(tx); setExpandedId(null); }}
-                        className="w-7 h-7 flex items-center justify-center text-[#64748B] hover:text-[#0F172A] hover:bg-white rounded-full transition-all"
-                      >
-                        <Pencil className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onDelete(tx.id); setExpandedId(null); }}
-                        className="w-7 h-7 flex items-center justify-center text-[#E11D48]/50 hover:text-[#E11D48] hover:bg-white rounded-full transition-all"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onToggleSettle(tx.id); setExpandedId(null); }}
-                        className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${tx.isSettled ? 'text-[#0F172A] hover:bg-white' : 'bg-[#0F172A] text-white shadow-md active:scale-95'}`}
-                      >
-                        {tx.isSettled ? <RotateCcw className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setExpandedId(null); }}
-                        className="w-7 h-7 flex items-center justify-center text-[#64748B] hover:text-[#0F172A] hover:bg-white rounded-full transition-all"
-                      >
-                        <ChevronRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setExpandedId(tx.id); }}
-                      className="w-8 h-8 flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] rounded-full transition-all opacity-30 hover:opacity-100"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                  )}
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setExpandedId(tx.id); }} 
+                    className="w-10 h-10 flex items-center justify-center text-[#CBD5E1] hover:text-[#0F172A] hover:bg-[#F8FAFC] rounded-full transition-all"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+
+                  <AnimatePresence>
+                    {expandedId === tx.id && (
+                      <>
+                        {/* Backdrop */}
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          onClick={(e) => { e.stopPropagation(); setExpandedId(null); }}
+                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100]"
+                        />
+                        {/* Bottom Sheet */}
+                        <motion.div 
+                          drag="y"
+                          dragConstraints={{ top: 0 }}
+                          dragElastic={0.2}
+                          onDragEnd={(_, info) => {
+                            if (info.offset.y > 100 || info.velocity.y > 500) {
+                              setExpandedId(null);
+                            }
+                          }}
+                          initial={{ y: "100%" }}
+                          animate={{ y: 0 }}
+                          exit={{ y: "100%" }}
+                          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                          className="fixed bottom-0 left-0 right-0 md:left-1/2 md:-translate-x-1/2 md:max-w-xl md:bottom-10 md:rounded-[48px] bg-white rounded-t-[40px] shadow-[0_-20px_80px_-20px_rgba(0,0,0,0.2)] md:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)] z-[101] p-8 pb-12 md:pb-10 border-t md:border border-[#E2E8F0] touch-none"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="w-12 h-1.5 bg-[#E2E8F0] rounded-full mx-auto mb-8 opacity-50 md:hidden" />
+                          
+                          <div className="flex flex-col gap-6 mb-10">
+                             <div>
+                               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#64748B] mb-2 opacity-50">Transaction Details</p>
+                               <div className="flex justify-between items-center">
+                                 <h4 className="text-2xl font-bold tracking-tight text-[#0F172A] lowercase font-sans">@{tx.contact}</h4>
+                                 <span className={`text-2xl font-luxury font-black tracking-tighter ${tx.type === 'gave' ? 'text-[#059669]' : 'text-[#E11D48]'}`}>
+                                   {tx.type === 'gave' ? '+' : '-'}{currency}{tx.amount.toLocaleString()}
+                                 </span>
+                               </div>
+                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-4 gap-4 md:gap-8">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); onEdit(tx); setExpandedId(null); }} 
+                              className="flex flex-col items-center gap-3 group"
+                            >
+                              <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-[#F8FAFC] text-[#64748B] group-hover:bg-[#0F172A] group-hover:text-white rounded-[22px] md:rounded-[26px] transition-all shadow-sm">
+                                <Pencil className="w-5 h-5 md:w-6 md:h-6" />
+                              </div>
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-[#64748B]">Edit</span>
+                            </button>
+
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); onDelete(tx.id); setExpandedId(null); }} 
+                              className="flex flex-col items-center gap-3 group"
+                            >
+                              <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-red-50 text-red-400 group-hover:bg-red-500 group-hover:text-white rounded-[22px] md:rounded-[26px] transition-all shadow-sm">
+                                <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
+                              </div>
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-[#64748B]">Delete</span>
+                            </button>
+
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); onToggleSettle(tx.id); setExpandedId(null); }} 
+                              className="flex flex-col items-center gap-3 group"
+                            >
+                              <div className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-[22px] md:rounded-[26px] transition-all shadow-sm ${tx.isSettled ? 'bg-[#F8FAFC] text-[#0F172A] group-hover:bg-[#0F172A] group-hover:text-white' : 'bg-[#0F172A] text-white shadow-xl hover:scale-105 active:scale-95'}`}>
+                                {tx.isSettled ? <RotateCcw className="w-5 h-5 md:w-6 md:h-6" /> : <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6" />}
+                              </div>
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-[#64748B]">{tx.isSettled ? 'Undo' : 'Settle'}</span>
+                            </button>
+
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setExpandedId(null); }} 
+                              className="flex flex-col items-center gap-3 group"
+                            >
+                              <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-[#F8FAFC] text-[#64748B] group-hover:bg-[#0F172A] group-hover:text-white rounded-[22px] md:rounded-[26px] transition-all shadow-sm">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                              </div>
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-[#64748B]">Close</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
